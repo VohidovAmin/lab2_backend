@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, status, Response, Path
 from typing import Union, List
 from models.user import User
-from models.response import Response
+from models.defaultResponse import DefaultResponse
 from utils import get_user_by_id
 
 router = APIRouter(
@@ -18,29 +18,35 @@ all_users = [
     User(id=6, name="Антон", phone="+3123345", passport="4224736385")
 ]
 
-@router.get("/users/", response_model=Union[List[User], None])
+responses = {
+    status.HTTP_404_NOT_FOUND: {"model": DefaultResponse, "description": "Item not found"}
+}
+
+@router.get("/users/", response_model=Union[List[User], None], status_code=status.HTTP_200_OK)
 def read_users():
     return all_users
 
-@router.get("/users/{id}", response_model=Union[User, Response])
-def get_user(id: int):
+@router.get("/users/{id}", response_model=Union[User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": User}})
+def get_user(id: int, response: Response):
     user: User = get_user_by_id(id, all_users)
     if user == None:
-        return Response(success=False, message="User not found")
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return DefaultResponse(success=False, message="User not found")
     
     return user   
 
-@router.post("/users", response_model=Response)
+@router.post("/users", response_model=DefaultResponse, status_code=status.HTTP_200_OK)
 def create_user(user: User):    
     all_users.append(user)
 
-    return Response(success=True, message="User successfully created") 
+    return DefaultResponse(success=True, message="User successfully created") 
 
-@router.put("/users", response_model=Union[User, Response])
-def update_user(user: User):
+@router.put("/users", response_model=Union[User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": User}})
+def update_user(user: User, response: Response):
     exists_user: User = get_user_by_id(user.id, all_users)
     if exists_user == None:
-        return Response(success=False, message="User not found")
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return DefaultResponse(success=False, message="User not found")
     
     exists_user.name = user.name
     exists_user.phone = user.phone
@@ -48,12 +54,13 @@ def update_user(user: User):
 
     return exists_user
 
-@router.delete("/users/{id}", response_model=Response)
-def remove_user(id: int):
+@router.delete("/users/{id}", response_model=DefaultResponse, responses={**responses, status.HTTP_200_OK: {"model": DefaultResponse}})
+def remove_user(id: int, response: Response):
     user: User = get_user_by_id(id, all_users)
     if user == None:
-        return Response(success=False, message="User not found")
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return DefaultResponse(success=False, message="User not found")
     
     all_users.remove(user)
 
-    return Response(success=True, message="User successfully removed") 
+    return DefaultResponse(success=True, message="User successfully removed") 
