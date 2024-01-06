@@ -2,9 +2,11 @@ from pydantic import BaseModel, Field
 from datetime import date, datetime
 from typing import Union, Annotated
 
-# Trip schemas
-class Trip(BaseModel):
+class BaseSchema(BaseModel):
     id: Annotated[int, Field(gt=0)]
+
+# Trip schemas
+class Trip(BaseSchema):
     driver_id: Annotated[int, Field(gt=0)]
     departure_time: datetime
 
@@ -34,13 +36,11 @@ class UpdateTrip(Trip):
     pass
 
 class PatchTrip(Trip):
-    id: Annotated[int, Field(gt=0)]
     driver_id: Annotated[Union[int, None], Field(gt=0)] = None
     departure_time: Union[datetime, None] = None
 
 # Driver schemas
-class Driver(BaseModel):
-    id: Annotated[int, Field(gt=0)]
+class Driver(BaseSchema):
     last_name: Annotated[str, Field(max_length=30)]
     first_name: Annotated[str, Field(max_length=30)]
     patronymic: Annotated[str, Field(max_length=30)]
@@ -81,7 +81,6 @@ class UpdateDriver(Driver):
     pass
 
 class PatchDriver(Driver):
-    id: Annotated[int, Field(gt=0)]
     last_name: Annotated[Union[str, None], Field(max_length=30)] = None
     first_name: Annotated[Union[str, None], Field(max_length=30)] = None
     patronymic: Annotated[Union[str, None], Field(max_length=30)] = None
@@ -89,8 +88,7 @@ class PatchDriver(Driver):
     experience: Union[date, None] = None
 
 # User schemas
-class User(BaseModel):
-    id: Annotated[int, Field(gt=0)] 
+class User(BaseSchema):
     last_name: Annotated[str, Field(max_length=30)]
     first_name: Annotated[str, Field(max_length=30)]
     patronymic: Annotated[str, Field(max_length=30)]
@@ -126,7 +124,6 @@ class UpdateUser(User):
     pass
 
 class PatchUser(User):
-    id: Annotated[int, Field(gt=0)]
     last_name: Annotated[Union[str, None], Field(max_length=30)] = None
     first_name: Annotated[Union[str, None], Field(max_length=30)] = None
     patronymic: Annotated[Union[str, None], Field(max_length=30)] = None

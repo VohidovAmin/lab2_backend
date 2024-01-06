@@ -16,12 +16,12 @@ responses = {
 
 @router.get("/users/", response_model=Union[List[schemas.User], None], status_code=status.HTTP_200_OK)
 def read_users(db: Session = Depends(get_db)):
-    all_users = crud.get_users(db)
+    all_users = crud.get_all(models.User, db)
     return all_users
 
 @router.get("/users/{id}", response_model=Union[schemas.User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
 def get_user(id: int, response: Response, db: Session = Depends(get_db)):
-    user: models.User = crud.get_user(db, id)
+    user: models.User = crud.get_by_id(models.User, id, db)
     if user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
@@ -30,12 +30,12 @@ def get_user(id: int, response: Response, db: Session = Depends(get_db)):
 
 @router.post("/users", response_model=DefaultResponse, status_code=status.HTTP_200_OK)
 def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
-    crud.create_user(db, user)
+    crud.create(models.User, user, db)
     return DefaultResponse(success=True, message="User successfully created") 
 
 @router.put("/users", response_model=Union[schemas.UpdateUser, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
-def update_user(user: schemas.User, response: Response, db: Session = Depends(get_db)):
-    updated_user: schemas.User = crud.update_user(db, user)
+def update_user(user: schemas.UpdateUser, response: Response, db: Session = Depends(get_db)):
+    updated_user: schemas.User = crud.update(models.User, user, db)
     if updated_user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
@@ -44,7 +44,7 @@ def update_user(user: schemas.User, response: Response, db: Session = Depends(ge
 
 @router.patch("/users", response_model=Union[schemas.PatchUser, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
 def patch_user(user: schemas.PatchUser, response: Response, db: Session = Depends(get_db)):
-    updated_user: schemas.User = crud.update_user(db, user)
+    updated_user: schemas.User = crud.update(models.User, user, db)
     if updated_user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
@@ -53,11 +53,11 @@ def patch_user(user: schemas.PatchUser, response: Response, db: Session = Depend
 
 @router.delete("/users/{id}", response_model=DefaultResponse, responses={**responses, status.HTTP_200_OK: {"model": DefaultResponse}})
 def remove_user(id: int, response: Response, db: Session = Depends(get_db)):
-    user: models.User = crud.get_user(db, id)
+    user: models.User = crud.get_by_id(models.User, id, db)
     if user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
     
-    crud.delete_user(db, id)
+    crud.delete(models.User, id, db)
 
     return DefaultResponse(success=True, message="User successfully removed") 
