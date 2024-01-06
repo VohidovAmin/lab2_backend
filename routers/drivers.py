@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Response, Path, Depends
 from typing import Union, List
 from sql_app import models, schemas, crud
-from models.defaultResponse import DefaultResponse
+from utils.defaultResponse import DefaultResponse
 from sql_app.database import get_db
 from sqlalchemy.orm import Session
 
