@@ -79,12 +79,29 @@ def get_trip(db: Session, trip_id: int):
 def get_trips(db: Session):
     return db.query(models.Trip).all()
 
-def create_trip(db: Session, trip: schemas.Trip):
-    db_trip = models.User(
-        driver_id=trip.driver_id,
-        departure_time=trip.departure_time
-    )
+def create_trip(db: Session, trip: schemas.CreateTrip):
+    db_trip = models.Trip(**trip.dict())
     db.add(db_trip)
     db.commit()
     db.refresh(db_trip)
     return db_trip
+
+def update_trip(db: Session, trip: schemas.Trip):
+    db_trip = get_trip(db, trip.id)
+    if db_trip is None:
+        return None
+    
+    for var, value in vars(trip).items():
+        setattr(db_trip, var, value) if value else None
+
+    db.commit()
+    db.refresh(db_trip)
+    return db_trip
+
+def delete_trip(db: Session, trip_id: int):
+    db_trip = get_trip(db, trip_id)
+    if db_trip is None:
+        return
+    
+    db.delete(db_trip)
+    db.commit()

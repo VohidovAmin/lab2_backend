@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Date, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from .database import Base
 
@@ -13,7 +13,7 @@ class Driver(Base):
     passport = Column(String(10), index=True, nullable=False)
     experience = Column(Date, index=True, nullable=False)
 
-    trips = relationship("Trip", back_populates="driver")
+    trips = relationship("Trip", cascade="all, delete-orphan")
 
 class Trip(Base):
     __tablename__ = "trip"
