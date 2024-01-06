@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT")
 POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD")
 POSTGRES_USER = os.environ.get("POSTGRES_USER")

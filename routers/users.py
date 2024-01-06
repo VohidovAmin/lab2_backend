@@ -1,34 +1,27 @@
-from fastapi import APIRouter, status, Response, Path
+from fastapi import APIRouter, status, Response, Path, Depends
 from typing import Union, List
-from models.user import User
+from sql_app import models, schemas, crud
 from models.defaultResponse import DefaultResponse
-from utils import get_user_by_id
+from sql_app.database import get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix="/api", 
     tags=["user"]
 )
 
-all_users = [
-    User(id=1, name="Кирилл", phone="+12345678", passport="0012345678"),
-    User(id=2, name="Виталий", phone="+7912323456", passport="1234567891"),
-    User(id=3, name="Пётр", phone="+234521346", passport="4745330876"),
-    User(id=4, name="Давид", phone="+51325346", passport="4530432911"),
-    User(id=5, name="Яков", phone="+92346541", passport="4451595022"),
-    User(id=6, name="Антон", phone="+3123345", passport="4224736385")
-]
-
 responses = {
     status.HTTP_404_NOT_FOUND: {"model": DefaultResponse, "description": "Item not found"}
 }
 
-@router.get("/users/", response_model=Union[List[User], None], status_code=status.HTTP_200_OK)
-def read_users():
+@router.get("/users/", response_model=Union[List[schemas.User], None], status_code=status.HTTP_200_OK)
+def read_users(db: Session = Depends(get_db)):
+    all_users = crud.get_users(db)
     return all_users
 
-@router.get("/users/{id}", response_model=Union[User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": User}})
-def get_user(id: int, response: Response):
-    user: User = get_user_by_id(id, all_users)
+@router.get("/users/{id}", response_model=Union[schemas.User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
+def get_user(id: int, response: Response, db: Session = Depends(get_db)):
+    user: models.User = crud.get_user(db, id)
     if user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
@@ -36,31 +29,35 @@ def get_user(id: int, response: Response):
     return user   
 
 @router.post("/users", response_model=DefaultResponse, status_code=status.HTTP_200_OK)
-def create_user(user: User):    
-    all_users.append(user)
-
+def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
+    crud.create_user(db, user)
     return DefaultResponse(success=True, message="User successfully created") 
 
-@router.put("/users", response_model=Union[User, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": User}})
-def update_user(user: User, response: Response):
-    exists_user: User = get_user_by_id(user.id, all_users)
-    if exists_user == None:
+@router.put("/users", response_model=Union[schemas.UpdateUser, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
+def update_user(user: schemas.User, response: Response, db: Session = Depends(get_db)):
+    updated_user: schemas.User = crud.update_user(db, user)
+    if updated_user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
-    
-    exists_user.name = user.name
-    exists_user.phone = user.phone
-    exists_user.passport = user.passport 
 
-    return exists_user
+    return updated_user
+
+@router.patch("/users", response_model=Union[schemas.PatchUser, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": schemas.User}})
+def patch_user(user: schemas.PatchUser, response: Response, db: Session = Depends(get_db)):
+    updated_user: schemas.User = crud.update_user(db, user)
+    if updated_user == None:
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return DefaultResponse(success=False, message="User not found111")
+
+    return updated_user
 
 @router.delete("/users/{id}", response_model=DefaultResponse, responses={**responses, status.HTTP_200_OK: {"model": DefaultResponse}})
-def remove_user(id: int, response: Response):
-    user: User = get_user_by_id(id, all_users)
+def remove_user(id: int, response: Response, db: Session = Depends(get_db)):
+    user: models.User = crud.get_user(db, id)
     if user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
         return DefaultResponse(success=False, message="User not found")
     
-    all_users.remove(user)
+    crud.delete_user(db, id)
 
     return DefaultResponse(success=True, message="User successfully removed") 
