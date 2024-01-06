@@ -46,23 +46,31 @@ def get_drivers(db: Session):
     return db.query(models.Driver).all()
 
 def create_driver(db: Session, driver: schemas.Driver):
-    db_driver = models.User(**driver.dict())
+    db_driver = models.Driver(**driver.dict())
     db.add(db_driver)
     db.commit()
     db.refresh(db_driver)
     return db_driver
 
-def update_driver(db: Session, user: schemas.User):
-    db_user = get_user(db, user.id)
-    if db_user is None:
+def update_driver(db: Session, driver: schemas.Driver):
+    db_driver = get_driver(db, driver.id)
+    if db_driver is None:
         return None
     
-    for var, value in vars(user).items():
-        setattr(db_user, var, value) if value else None
+    for var, value in vars(driver).items():
+        setattr(db_driver, var, value) if value else None
 
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.refresh(db_driver)
+    return db_driver
+
+def delete_driver(db: Session, driver_id: int):
+    db_driver = get_driver(db, driver_id)
+    if db_driver is None:
+        return
+    
+    db.delete(db_driver)
+    db.commit()
 
 # trips operations
 def get_trip(db: Session, trip_id: int):

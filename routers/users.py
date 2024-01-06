@@ -47,7 +47,7 @@ def patch_user(user: schemas.PatchUser, response: Response, db: Session = Depend
     updated_user: schemas.User = crud.update_user(db, user)
     if updated_user == None:
         response.status_code = status.HTTP_404_NOT_FOUND
-        return DefaultResponse(success=False, message="User not found111")
+        return DefaultResponse(success=False, message="User not found")
 
     return updated_user
 

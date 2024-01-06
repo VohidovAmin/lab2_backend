@@ -30,7 +30,7 @@ class Driver(BaseModel):
                 "first_name": "Kirill",
                 "patronymic": "Guramovich",
                 "passport": "0123456789",
-                "date": "06.01.2024"
+                "experience": "2024-01-06"
             }
         }
 
@@ -45,7 +45,7 @@ class CreateDriver(Driver):
                 "first_name": "Kirill",
                 "patronymic": "Guramovich",
                 "passport": "0123456789",
-                "date": "06.01.2024"
+                "experience": "2024-01-06"
             }
         }
 
