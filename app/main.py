@@ -1,12 +1,13 @@
 from typing import Union
 from fastapi import FastAPI, Response, status
 from fastapi.responses import HTMLResponse
-from routers import users, drivers, trips
 import uvicorn
 
-from sql_app import crud, models, schemas
-from sql_app.database import SessionLocal, engine
-models.Base.metadata.create_all(bind=engine)
+from app.routers import users, drivers, trips
+from app.config import POSTGRES_DATABASE_URL
+from app.database import db_manager
+
+db_manager.init(POSTGRES_DATABASE_URL)
 
 app = FastAPI()
 
