@@ -3,6 +3,7 @@ from typing import Union, List
 from app.schemas.default_response import DefaultResponse
 from app.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
 from app.models.user import User
 from app.schemas.user import User as UserSchema, CreateUser, UpdateUser, PatchUser
@@ -31,10 +32,10 @@ async def get_user(id: int, response: Response, db: AsyncSession = Depends(get_d
     
     return user   
 
-@router.post("/users", response_model=DefaultResponse, status_code=status.HTTP_200_OK)
+@router.post("/users", status_code=status.HTTP_200_OK)
 async def create_user(user: CreateUser, db: AsyncSession = Depends(get_db)):
-    await crud.create(User, user, db)
-    return DefaultResponse(success=True, message="User successfully created") 
+    user: User = await crud.create(User, user, db)
+    return JSONResponse(content={"user_id": user.id})
 
 @router.put("/users", response_model=Union[UpdateUser, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": UserSchema}})
 async def update_user(user: UpdateUser, response: Response, db: AsyncSession = Depends(get_db)):

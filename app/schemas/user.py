@@ -3,10 +3,10 @@ from typing import Union, Annotated
 from app.schemas.base import BaseSchema
 
 class User(BaseSchema):
-    last_name: Annotated[str, Field(max_length=30)]
-    first_name: Annotated[str, Field(max_length=30)]
-    patronymic: Annotated[str, Field(max_length=30)]
-    group: Annotated[str, Field(max_length=10)]
+    last_name: Annotated[str, Field(min_length=2, max_length=30)]
+    first_name: Annotated[str, Field(min_length=2, max_length=30)]
+    patronymic: Annotated[str, Field(min_length=2, max_length=30)]
+    group: Annotated[str, Field(min_length=2, max_length=10)]
 
     class ConfigDict:
         from_attributes=True
@@ -38,7 +38,7 @@ class UpdateUser(User):
     pass
 
 class PatchUser(User):
-    last_name: Annotated[Union[str, None], Field(max_length=30)] = None
-    first_name: Annotated[Union[str, None], Field(max_length=30)] = None
-    patronymic: Annotated[Union[str, None], Field(max_length=30)] = None
-    group: Annotated[Union[str, None], Field(max_length=10)] = None
+    last_name: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
+    first_name: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
+    patronymic: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
+    group: Annotated[Union[str, None], Field(min_length=2, max_length=10)] = None

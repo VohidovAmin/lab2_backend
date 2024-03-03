@@ -1,63 +1,45 @@
-from typing import Any
-from typing import Generator
+import asyncio
+from typing import AsyncGenerator
 
 import pytest
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) 
-#this is to include backend dir in sys.path so that we can import from db,main.py
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 from app.database import get_db
+from app.main import app
+from app.models.base import BaseModel
 from app.config import POSTGRES_TEST_DATABASE_URL
 
-print("HERE0 AAAAAAAAAAAAAAAAAAAAAAAAAAAA -------------------")
-print(POSTGRES_TEST_DATABASE_URL)
-engine = create_engine(POSTGRES_TEST_DATABASE_URL)
-SessionTesting = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine_test = create_async_engine(POSTGRES_TEST_DATABASE_URL, poolclass=NullPool)
+async_session_maker = sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
+BaseModel.metadata.bind = engine_test
 
-@pytest.fixture(scope="function")
-def app() -> Generator[FastAPI, Any, None]:
-    print("HERE -------------------")
-    from app.main import app
-    """
-    Create a fresh database on each test case.
-    """
-    Base = declarative_base()
-    Base.metadata.create_all(engine)  # Create the tables.
-    
-    yield app
-    Base.metadata.drop_all(engine)
+async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
 
-@pytest.fixture(scope="function")
-def db_session(app: FastAPI) -> Generator[SessionTesting, Any, None]:
-    print("HERE1 -------------------")
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = SessionTesting(bind=connection)
-    yield session  # use the session in tests.
-    session.close()
-    transaction.rollback()
-    connection.close()
+app.dependency_overrides[get_db] = override_get_async_session
 
-@pytest.fixture(scope="function")
-def client(app: FastAPI, db_session: SessionTesting) -> Generator[TestClient, Any, None]:
-    print("HERE2 -------------------")
-    """
-    Create a new FastAPI TestClient that uses the `db_session` fixture to override
-    the `get_db` dependency that is injected into routes.
-    """
+@pytest.fixture(autouse=True, scope='session')
+async def prepare_database():
+    async with engine_test.begin() as conn:
+        await conn.run_sync(BaseModel.metadata.create_all)
+    yield
+    async with engine_test.begin() as conn:
+        await conn.run_sync(BaseModel.metadata.drop_all)
 
-    def _get_test_db():
-        try:
-            yield db_session
-        finally:
-            pass
+# SETUP
+@pytest.fixture(scope='session')
+def asyncio_event_loop(request):
+    """Create an instance of the default event loop for each test case."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
-    app.dependency_overrides[get_db] = _get_test_db
-    with TestClient(app, base_url="http://127.0.0.1:9000") as client:
+@pytest.fixture(scope="session")
+async def client() -> AsyncGenerator[AsyncClient, None]:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client

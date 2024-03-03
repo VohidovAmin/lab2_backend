@@ -3,6 +3,7 @@ from typing import Union, List
 from app.schemas.default_response import DefaultResponse
 from app.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 
 from app.models.driver import Driver
 from app.schemas.driver import Driver as DriverSchema, CreateDriver, UpdateDriver, PatchDriver
@@ -17,7 +18,7 @@ responses = {
     status.HTTP_404_NOT_FOUND: {"model": DefaultResponse, "description": "Item not found"}
 }
 
-@router.get("/drivers/", response_model=Union[List[DriverSchema], None], status_code=status.HTTP_200_OK)
+@router.get("/drivers", response_model=Union[List[DriverSchema], None], status_code=status.HTTP_200_OK)
 async def read_drivers(db: AsyncSession = Depends(get_db)):
     all_drivers = await crud.get_all(Driver, db)
     return all_drivers
@@ -31,10 +32,10 @@ async def get_driver(id: int, response: Response, db: AsyncSession = Depends(get
     
     return driver
 
-@router.post("/drivers", response_model=DefaultResponse, status_code=status.HTTP_200_OK)
+@router.post("/drivers", status_code=status.HTTP_200_OK)
 async def create_driver(driver: CreateDriver, db: AsyncSession = Depends(get_db)):
-    await crud.create(Driver, driver, db)
-    return DefaultResponse(success=True, message="Driver successfully created")
+    driver: Driver = await crud.create(Driver, driver, db)
+    return JSONResponse(content={"driver_id": driver.id})
 
 @router.put("/drivers", response_model=Union[UpdateDriver, DefaultResponse], responses={**responses, status.HTTP_200_OK: {"model": DriverSchema}})
 async def update_driver(driver: DriverSchema, response: Response, db: AsyncSession = Depends(get_db)):

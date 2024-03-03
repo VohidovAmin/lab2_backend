@@ -5,9 +5,9 @@ from app.schemas.base import BaseSchema
 from app.schemas.trip import Trip
 
 class Driver(BaseSchema):
-    last_name: Annotated[str, Field(max_length=30)]
-    first_name: Annotated[str, Field(max_length=30)]
-    patronymic: Annotated[str, Field(max_length=30)]
+    last_name: Annotated[str, Field(min_length=2, max_length=30)]
+    first_name: Annotated[str, Field(min_length=2, max_length=30)]
+    patronymic: Annotated[str, Field(min_length=2, max_length=30)]
     passport: Annotated[str, Field(max_length=10, min_length=10, pattern=r'^\d*$')]
     experience: date
     
@@ -45,8 +45,8 @@ class UpdateDriver(Driver):
     pass
 
 class PatchDriver(Driver):
-    last_name: Annotated[Union[str, None], Field(max_length=30)] = None
-    first_name: Annotated[Union[str, None], Field(max_length=30)] = None
-    patronymic: Annotated[Union[str, None], Field(max_length=30)] = None
+    last_name: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
+    first_name: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
+    patronymic: Annotated[Union[str, None], Field(min_length=2, max_length=30)] = None
     passport: Annotated[Union[str, None], Field(max_length=10, min_length=10, pattern=r'^\d*$')] = None
     experience: Union[date, None] = None
