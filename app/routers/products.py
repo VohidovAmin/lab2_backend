@@ -15,7 +15,7 @@ router = APIRouter(
 store: Dict[int, ProductScehma] = {}
 
 @router.post("/products")
-def create_driver(product: CreateProduct):
+def create_product(product: CreateProduct):
     product.id = len(store) + 1
 
     store[product.id] = product
@@ -26,7 +26,7 @@ def create_driver(product: CreateProduct):
     )
 
 @router.get("/products/{id}")
-def get_driver(id: int):
+def get_product(id: int):
     if id not in store:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
