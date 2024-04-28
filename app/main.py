@@ -5,7 +5,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import uvicorn
 import logging
 
-from app.routers import users, drivers, trips, products
+from app.routers import users, drivers, trips, products, auth_users
 from app.config import POSTGRES_DATABASE_URL
 from app.database import db_manager
 from app.routers import background_tasks_advanced_dependencies
@@ -21,6 +21,7 @@ app.include_router(drivers.router)
 app.include_router(trips.router)
 app.include_router(background_tasks_advanced_dependencies.router)
 app.include_router(products.router)
+app.include_router(auth_users.router)
 
 @app.get("/", response_class=HTMLResponse)
 def root():
