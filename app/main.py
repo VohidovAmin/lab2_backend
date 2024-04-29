@@ -27,12 +27,6 @@ app.include_router(auth_users.router)
 def root():
     return "<h1>This is the root</h1>"
 
-
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1"]
-)
-
 @app.middleware("http")
 async def log_request(request: Request, call_next):
     logging.info(f"Request: {request.method} {request.url.path}")
