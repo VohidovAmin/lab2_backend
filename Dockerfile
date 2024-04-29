@@ -21,6 +21,5 @@ COPY . .
 # install dependencies
 RUN poetry install
 
-CMD ["poetry", "run", "alembic", "upgrade", "head"]
-
-CMD ["poetry", "run", "gunicorn", "app.main:app", "--workers", "2", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind=0.0.0.0:9000"]
+RUN poetry run alembic upgrade head
+CMD poetry run gunicorn main:app --workers 1 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000
